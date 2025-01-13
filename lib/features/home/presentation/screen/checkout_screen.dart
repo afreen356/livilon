@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:js' as js;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:livilon/features/cart/presentation/bloc/cart_bloc.dart';
@@ -34,6 +36,44 @@ Color getScaffoldColor() {
   return Colors.grey.shade200;
 }
 
+void openRazorpayWeb({
+  required String key,
+  required double amount,
+  required String name,
+  required String description,
+  required String prefillEmail,
+  required String prefillContact,
+  required Function(String) onSuccess,
+  required Function(String) onFailure,
+}) {
+  final options = js.JsObject.jsify({
+    'key': key,
+    'amount': (amount * 100).toInt(), // Convert to paisa
+    'name': name,
+    'description': description,
+    'prefill': {
+      'email': prefillEmail,
+      'contact': prefillContact,
+    },
+    'handler': js.allowInterop((response) {
+      onSuccess(response['razorpay_payment_id']);
+    }),
+    'modal': js.JsObject.jsify({
+      'ondismiss': js.allowInterop(() {
+        onFailure('Payment dismissed by user');
+      }),
+    }),
+  });
+
+  final razorpay = js.context['Razorpay'];
+  if (razorpay != null) {
+    final rzp = js.JsObject(razorpay, [options]);
+    rzp.callMethod('open');
+  } else {
+    onFailure('Razorpay is not available on the web');
+  }
+}
+
 final Razorpay razorpay = Razorpay();
 
 const double shippingCharges = 40.00;
@@ -55,67 +95,65 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(color: Colors.white),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Text(
-                'Shipping address',
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 10),
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                widget.address.fullName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(height: 7),
-           
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                "${widget.address.city}, ${widget.address.state} - ${widget.address.pincode}",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                "Mobile: ${widget.address.phoneNo}",
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-         
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(color: Colors.white),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              child: Text(
+                                'Shipping address',
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                widget.address.fullName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                "${widget.address.city}, ${widget.address.state} - ${widget.address.pincode}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                "Mobile: ${widget.address.phoneNo}",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
                             const SizedBox(height: 10),
                             Divider(
                               color: Colors.grey.withOpacity(0.2),
@@ -212,7 +250,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         const SizedBox(height: 5),
                                         productName(items['productName'] ??
                                             'Unnamed Product'),
-                                        Text(items['dimensions'].toString() ),
+                                        Text(items['dimensions'].toString()),
                                       ],
                                     ),
                                   ),
@@ -222,30 +260,37 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       productPrice('₹ $totalPrice'),
-                                    const  SizedBox(height: 24,),
-                                       Container(
-                                        decoration: BoxDecoration(color: Colors.grey,borderRadius: BorderRadius.circular(2)),
-                                         child: Padding(
-                                           padding: const EdgeInsets.all(5.0),
-                                           child: Text(
-                                                                         'Qty: ${items['quantity']}',
-                                                                         style: const TextStyle(
-                                                                           fontSize: 14,
-                                                                           color: Colors.white,
-                                                                         ),
-                                                                       ),
-                                         ),
-                                       ),
-                                       SizedBox(height: 20,),
+                                      const SizedBox(
+                                        height: 24,
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                            color: Colors.grey,
+                                            borderRadius:
+                                                BorderRadius.circular(2)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(5.0),
+                                          child: Text(
+                                            'Qty: $quantity',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 20,
+                                      ),
                                     ],
                                   )
                                 ],
                               ),
                             ),
-                            
-                            // Divider Section
+
+                           
                             if (index != widget.cartItems.length - 1)
-                               Divider(
+                              Divider(
                                 color: Colors.grey.withOpacity(0.3),
                                 thickness: 1,
                                 // height: 20,
@@ -310,21 +355,51 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      log('hi');
-
-                      var options = {
-                        'key': 'rzp_test_AAOvWXA6IXusAo',
-                        'amount': 5000,
-                        'currency': 'INR',
-                        'name': 'Acme Corp.',
-                        'description': 'Fine T-Shirt',
-                        'prefill': {
-                          'contact': '8888888888',
-                          'email': 'test@razorpay.com'
-                        }
-                      };
-                      razorpay.open(options);
+                      if (kIsWeb) {
+                        openRazorpayWeb(
+                          key: 'rzp_test_AAOvWXA6IXusAo',
+                          amount:50,
+                          name: 'Acme Corp.',
+                          description: 'Fine T-Shirt',
+                          prefillEmail: 'test@razorpay.com',
+                          prefillContact: '8888888888',
+                          onSuccess: (paymentId) {
+                            // Navigate to payment success screen
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => const PaymentSuccess()),
+                            );
+                            log('Web Payment Success: $paymentId');
+                          },
+                          onFailure: (errorMessage) {
+                            // Handle payment failure
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const HomePage()),
+                              (route) => false,
+                            );
+                            log('Web Payment Failure: $errorMessage');
+                          },
+                        );
+                      } else {
+                         log('hi');
+                        var options = {
+                          'key': 'rzp_test_AAOvWXA6IXusAo',
+                          'amount': 5000,
+                          'currency': 'INR',
+                          'name': 'Acme Corp.',
+                          'description': 'Fine T-Shirt',
+                          'prefill': {
+                            'contact': '8888888888',
+                            'email': 'test@razorpay.com'
+                          }
+                        };
+                        razorpay.open(options);
+                      }
                     },
+
+                    
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: getButtonColor(),
                       padding: const EdgeInsets.symmetric(
@@ -399,8 +474,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void handlePaymentError(PaymentFailureResponse response) {
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()));
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false);
     log('payment error: ${response.message}');
   }
 
@@ -410,6 +486,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
       int quantity = item['count'] ?? 1;
       double price = double.tryParse(item['price'].toString()) ?? 0;
       return sum + (price * quantity);
+    });
+  }
+
+  int getTotalQuantity(CartLoadedSuccessState state) {
+    // ignore: avoid_types_as_parameter_names
+    return state.cartItems.fold(0, (sum, item) {
+      int quantity = item['count'] ?? 1;
+      return sum + quantity;
     });
   }
 }

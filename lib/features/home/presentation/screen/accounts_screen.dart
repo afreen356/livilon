@@ -66,7 +66,6 @@ class _AccountsPageState extends State<AccountsPage> {
             Divider(
               color: Colors.grey.withOpacity(0.2),
             ),
-
             ListTile(
               leading: CircleAvatar(
                 radius: 30,
@@ -75,8 +74,10 @@ class _AccountsPageState extends State<AccountsPage> {
                   email != null && email!.isNotEmpty
                       ? email![0].toUpperCase()
                       : '?',
-                  style: const TextStyle(fontSize: 20,
-                      color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               title: Text(
@@ -143,7 +144,6 @@ class _AccountsPageState extends State<AccountsPage> {
               ),
               title: customText('Payment'),
             ),
-           
             const Divider(),
             GestureDetector(
               onTap: () {
@@ -165,11 +165,11 @@ class _AccountsPageState extends State<AccountsPage> {
                                   onPressed: () {
                                     FirebaseAuth.instance.signOut();
                                     googleSignIn.signOut();
-                      
-                                    Navigator.of(context).push(
+
+                                    Navigator.of(context).pushAndRemoveUntil(
                                         MaterialPageRoute(
                                             builder: (context) =>
-                                                const UserLoginScreen()));
+                                                const UserLoginScreen()),(Route route)=>false);
                                   },
                                   child: const Text(
                                     'Yes',

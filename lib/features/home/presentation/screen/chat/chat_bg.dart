@@ -11,8 +11,8 @@ class ChatBackground extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDarkTheme
-              ? [Color(0xFF1C1C1C), Color(0xFF121212)] 
-              : [Color(0xFFF5F5F5), Color(0xFFFFFFFF)], 
+              ? [const Color(0xFF1C1C1C), const Color(0xFF121212)] 
+              : [const Color(0xFFF5F5F5), const Color(0xFFFFFFFF)], 
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

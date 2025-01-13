@@ -29,3 +29,13 @@ void alertDialogue(String message, BuildContext context) {
     },
   );
 }
+
+void showSnackBar(String message, BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 3),
+    ),
+  );
+}

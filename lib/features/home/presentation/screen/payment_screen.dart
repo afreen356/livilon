@@ -19,7 +19,7 @@ class PaymentSuccess extends StatelessWidget {
                   'https://lottie.host/5c09846e-0f86-4fd2-8e0f-df3e0d780015/bAGmD18dit.json',
                   height: 250,
                   width: 350),
-                   Text('Successfully ordered',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
+                   const Text('Successfully ordered',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
               ],
             ),
           ),
@@ -33,7 +33,7 @@ class PaymentSuccess extends StatelessWidget {
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  MaterialPageRoute(builder: (context) => const HomePage()),
                   (Route<dynamic> route) => false,
                 );
                       },

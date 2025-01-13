@@ -1,5 +1,6 @@
-import 'dart:developer';
+// ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:livilon/features/cart/data/cart_service.dart';
@@ -93,20 +94,25 @@ class _WishlistPageState extends State<WishlistPage> {
             const Text(
               "Favourite the products you love and buy them ",
               style: TextStyle(
-                  fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold),
             ),
             const Text('whenever you like!',
                 style: TextStyle(
-                    fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold)),
+                    fontSize: 14,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             Container(
               width: 200,
               decoration: BoxDecoration(
-                  color: getButtonColor(), borderRadius: BorderRadius.circular(2)),
+                  color: getButtonColor(),
+                  borderRadius: BorderRadius.circular(2)),
               child: TextButton(
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const HomeScreen()));
+                      builder: (context) => const HomePage()));
                 },
                 child: const Text(
                   "Start Shopping",
@@ -120,7 +126,8 @@ class _WishlistPageState extends State<WishlistPage> {
     );
   }
 
-  Widget _buildFavouritesGrid(List<FavouriteModel> favourites, BuildContext context) {
+  Widget _buildFavouritesGrid(
+      List<FavouriteModel> favourites, BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 4 : 2;
 
@@ -130,8 +137,8 @@ class _WishlistPageState extends State<WishlistPage> {
         backgroundColor: Colors.grey[50],
         leading: IconButton(
           onPressed: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const HomePage()));
           },
           icon: const Icon(Icons.arrow_back),
         ),
@@ -280,59 +287,53 @@ class _WishlistPageState extends State<WishlistPage> {
     String name,
     String price,
     String image,
-
-   )async{
+  ) async {
     final dimnsionBloc = context.read<DimensionBloc>();
-                            final dimensionState = dimnsionBloc.state;
-                            Dimensions? dimensions;
-                            if (dimensionState is DimensionAddedState) {
-                              dimensions = dimensionState.dimensions;
-                            } else {
-                              showCustomSnackbar(
-                                context,
-                                'Please add dimensions first!',
-                                Colors.red,
-                              );
-                              return;
-                            }
+    final dimensionState = dimnsionBloc.state;
+    Dimensions? dimensions;
+    if (dimensionState is DimensionAddedState) {
+      dimensions = dimensionState.dimensions;
+    } else {
+      showCustomSnackbar(
+        context,
+        'Please add dimensions first!',
+        Colors.red,
+      );
+      return;
+    }
     final CartRepositoryImplementation cartRepoImplement =
         CartRepositoryImplementation();
 
-    bool isProductInCart =
-        await cartRepoImplement.isProductInCart(productID);
+    bool isProductInCart = await cartRepoImplement.isProductInCart(productID);
 
     if (isProductInCart) {
-      // ignore: use_build_context_synchronously
       showCustomSnackbar(context, 'Product is already in the cart', Colors.red);
       return;
     }
 
-     final cartItem = CartModel(
-                                productid: productID,
-                                cartid: 'cartId',
-                                count: 1,
-                                imageUrl: image,
-                                name: name,
-                                price: price,
-                                dimensions: [
-                                   'Height: ${dimensions.height.toString()}',
-                                  'Width: ${dimensions.width.toString()}',
-                                  'Depth: ${dimensions.depth.toString()}'
-                                ]
-                                );
-                                 log('5');
-                            
-                            context.read<CartBloc>().add(AddtoCartEvent(
-                                productId: productID,
-                                productName: cartItem.name??'',
-                                productPrice: cartItem.price??'',
-                                productQuantity: cartItem.count??0,
-                                image: image,
-                                dimensions: cartItem.dimensions
-                                ));
-                                 log('6');
-                            // ignore: use_build_context_synchronously
-                            showCustomSnackbar(
-                                context, "$name added to cart.", Colors.green);
+    final cartItem = CartModel(
+        productid: productID,
+        cartid: 'cartId',
+        count: 1,
+        imageUrl: image,
+        name: name,
+        price: price,
+        dimensions: [
+          'Height: ${dimensions.height.toString()}',
+          'Width: ${dimensions.width.toString()}',
+          'Depth: ${dimensions.depth.toString()}'
+        ]);
+    log('5');
+
+    context.read<CartBloc>().add(AddtoCartEvent(
+        productId: productID,
+        productName: cartItem.name ?? '',
+        productPrice: cartItem.price ?? '',
+        productQuantity: cartItem.count ?? 0,
+        image: image,
+        dimensions: cartItem.dimensions));
+    log('6');
+
+    showCustomSnackbar(context, "$name added to cart.", Colors.green);
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -266,7 +268,7 @@ class _DetailScreenState extends State<DetailScreen> {
                               child: IconButton(
                                 onPressed: () {
                                   FlutterPhoneDirectCaller.callNumber(
-                                      '+919567223371');
+                                      '+919243337022');
                                 },
                                 icon: const Icon(Icons.phone, size: 24),
                                 color: Colors.black,
@@ -324,7 +326,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                 .isProductInCart(widget.productId);
 
                             if (isProductIncart) {
-                              // ignore: use_build_context_synchronously
+                             
                               showCustomSnackbar(context,
                                   'Product is already in the cart', Colors.black87);
                               return;
@@ -353,7 +355,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                 dimensions: cartItem.dimensions,
                                 image: image ?? ''));
                             log('6');
-                            // ignore: use_build_context_synchronously
+                            
                             showCustomSnackbar(
                                 context, "$name added to cart.", Colors.green);
                           },

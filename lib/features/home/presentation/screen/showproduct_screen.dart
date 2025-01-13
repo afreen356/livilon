@@ -7,6 +7,7 @@ import 'package:livilon/features/home/presentation/bloc/products/homebloc.dart';
 import 'package:livilon/features/home/presentation/bloc/products/homestate.dart';
 import 'package:livilon/features/home/presentation/screen/detail_screen.dart';
 import 'package:livilon/features/wishlist/presentation/screen/wishlist_page.dart';
+import 'package:shimmer/shimmer.dart';
 
 // ignore: must_be_immutable
 class ShowProducts extends StatefulWidget {
@@ -45,8 +46,8 @@ class _ShowProductsState extends State<ShowProducts> {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const WishlistPage()));
         } else if (state is HomeNavigateToCartPageActionstate) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) =>  CartPage()));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => CartPage()));
         }
       },
       builder: (context, state) {
@@ -56,8 +57,6 @@ class _ShowProductsState extends State<ShowProducts> {
                 child: customCategoryAppbar(
                     categoryName ?? 'Loading...', context)),
             body: Column(children: [
-             
-
               Expanded(
                 child: StreamBuilder(
                     stream: FirebaseFirestore.instance
@@ -107,13 +106,31 @@ class _ShowProductsState extends State<ShowProducts> {
                                             productImage[0],
                                             fit: BoxFit.cover,
                                             filterQuality: FilterQuality.high,
+                                             loadingBuilder:
+                                                    (BuildContext context,
+                                                        Widget child,
+                                                        ImageChunkEvent?
+                                                            loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  } else {
+                                                    return Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey.shade300,
+                                                        highlightColor:
+                                                            Colors.grey.shade100,
+                                                        child: Container(
+                                                          color: Colors
+                                                              .grey.shade300,
+                                                        )
+                                                        );
+                                                  }
+                                                },
                                           ),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(
-                                        height:
-                                            8), 
+                                    const SizedBox(height: 8),
                                     Text(
                                       name,
                                       style: const TextStyle(
@@ -123,7 +140,6 @@ class _ShowProductsState extends State<ShowProducts> {
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     ),
-                                    
                                     Text(
                                       '\$${price.toStringAsFixed(2)}',
                                       style: const TextStyle(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:livilon/components/searchbox.dart';
 import 'package:livilon/features/cart/presentation/screen/cartpage.dart';
@@ -14,6 +15,7 @@ import 'package:livilon/features/wishlist/presentation/bloc/wishlist_bloc.dart';
 import 'package:livilon/features/wishlist/presentation/bloc/wishlist_event.dart';
 import 'package:livilon/features/wishlist/presentation/bloc/wishlist_state.dart';
 import 'package:livilon/features/wishlist/presentation/screen/wishlist_page.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomeWrapper extends StatefulWidget {
   const HomeWrapper({super.key});
@@ -201,186 +203,188 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 15,
           ),
           Expanded(
-              child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('Products')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Center(
-                        child: Container(
-                            height: 70,
-                            width: 70,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.grey.shade300,
-                            ),
-                            child: const Center(
-                              child: SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.grey,
+              child: LayoutBuilder(
+                       builder: (context,constraints){
+                        int crossAxisCount = constraints.maxWidth>600?3:2;
+                           return StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('Products')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Center(
+                          child: Container(
+                              height: 70,
+                              width: 70,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey.shade300,
+                              ),
+                              child: const Center(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            )),
-                      );
-                    } else {
-                      return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: GridView.builder(
-                              itemCount: snapshot.data!.docs.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 3,
-                                mainAxisSpacing: 3,
-                                childAspectRatio: 0.7,
-                              ),
-                              itemBuilder: (context, index) {
-                                final product = snapshot.data!.docs[index];
-                                final List<dynamic> productImage =
-                                    product['image'];
-                                final String productId = product.id;
-                                final String name = product['name'];
-                                final price = product['price']?.toString();
-                                return Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      DetailScreen(
-                                                        productId: product.id,
-                                                      )));
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          child: AspectRatio(
-                                            aspectRatio: 1,
-                                            child: Image.network(
-                                              productImage[0],
-                                              fit: BoxFit.cover,
-                                              filterQuality: FilterQuality.high,
-                                              loadingBuilder:
-                                                  (BuildContext context,
-                                                      Widget child,
-                                                      ImageChunkEvent?
-                                                          loadingProgress) {
-                                                if (loadingProgress == null) {
-                                                  return child; 
-                                                } else {
-                                                  return Center(
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      value: loadingProgress
-                                                                  .expectedTotalBytes !=
-                                                              null
-                                                          ? loadingProgress
-                                                                  .cumulativeBytesLoaded /
-                                                              (loadingProgress
-                                                                      .expectedTotalBytes ??
-                                                                  1)
-                                                          : null,
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        name,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '\$$price',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          BlocConsumer<FavouriteBloc,
-                                              FavouriteState>(
-                                            listener: (context, state) {},
-                                            builder: (context, state) {
-                                              bool isfavourite = false;
-                                              if (state is FavouriteSuccess) {
-                                                isfavourite = state.favourites
-                                                    .any((favourite) =>
-                                                        favourite.productId ==
-                                                        productId);
-                                              }
-                                              return IconButton(
-                                                icon: Icon(
-                                                  isfavourite
-                                                      ? Icons.favorite
-                                                      : Icons.favorite_border,
-                                                  color: isfavourite
-                                                      ? Colors.red
-                                                      : Colors.black,
-                                                ),
-                                                onPressed: () {
-                                                  String favid = productId;
-                                                  if (isfavourite) {
-                                                    wishlistBloc.add(
-                                                        RemoveFavouriteEvent(
-                                                            favid));
+                              )),
+                        );
+                      } else {
+                        return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: GridView.builder(
+                                itemCount: snapshot.data!.docs.length,
+                                gridDelegate:
+                                     SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 3,
+                                  mainAxisSpacing: 3,
+                                  childAspectRatio: 0.7,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final product = snapshot.data!.docs[index];
+                                  final List<dynamic> productImage =
+                                      product['image'];
+                                  final String productId = product.id;
+                                  final String name = product['name'];
+                                  final price = product['price']?.toString();
+                                  return Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        DetailScreen(
+                                                          productId: product.id,
+                                                        )));
+                                          },
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: Image.network(
+                                                productImage[0],
+                                                fit: BoxFit.cover,
+                                                filterQuality: FilterQuality.high,
+                                                loadingBuilder:
+                                                    (BuildContext context,
+                                                        Widget child,
+                                                        ImageChunkEvent?
+                                                            loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
                                                   } else {
-                                                    final favourites =
-                                                        FavouriteModel(
-                                                            productId:
-                                                                productId,
-                                                            name: name,
-                                                            favouriteid: favid,
-                                                            price: price,
-                                                            imageUrl:
-                                                                productImage[
-                                                                    0]);
-                                                    wishlistBloc.add(
-                                                        AddFavouriteEvent(
-                                                            favourites));
+                                                    return Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey.shade300,
+                                                        highlightColor:
+                                                            Colors.grey.shade100,
+                                                        child: Container(
+                                                          color: Colors
+                                                              .grey.shade300,
+                                                        )
+                                                        );
                                                   }
                                                 },
-                                              );
-                                            },
+                                              ),
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }));
-                    }
-                  }))
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          name,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              '\$$price',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            BlocConsumer<FavouriteBloc,
+                                                FavouriteState>(
+                                              listener: (context, state) {},
+                                              builder: (context, state) {
+                                                bool isfavourite = false;
+                                                if (state is FavouriteSuccess) {
+                                                  isfavourite = state.favourites
+                                                      .any((favourite) =>
+                                                          favourite.productId ==
+                                                          productId);
+                                                }
+                                                return IconButton(
+                                                  icon: Icon(
+                                                    isfavourite
+                                                        ? Icons.favorite
+                                                        : Icons.favorite_border,
+                                                    color: isfavourite
+                                                        ? Colors.red
+                                                        : Colors.black,
+                                                  ),
+                                                  onPressed: () {
+                                                    String favid = productId;
+                                                    if (isfavourite) {
+                                                      wishlistBloc.add(
+                                                          RemoveFavouriteEvent(
+                                                              favid));
+                                                    } else {
+                                                      final favourites =
+                                                          FavouriteModel(
+                                                              productId:
+                                                                  productId,
+                                                              name: name,
+                                                              favouriteid: favid,
+                                                              price: price,
+                                                              imageUrl:
+                                                                  productImage[
+                                                                      0]);
+                                                      wishlistBloc.add(
+                                                          AddFavouriteEvent(
+                                                              favourites));
+                                                    }
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }));
+                      }
+                    });
+                       },
+                
+              ))
         ]),
       ),
     );

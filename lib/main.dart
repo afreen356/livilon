@@ -9,7 +9,6 @@ import 'package:livilon/features/home/presentation/bloc/chat/chat_bloc.dart';
 import 'package:livilon/features/home/presentation/bloc/chat/chat_event.dart';
 import 'package:livilon/features/home/presentation/bloc/dimensions/dimension_bloc.dart';
 import 'package:livilon/features/home/presentation/bloc/products/homebloc.dart';
-
 import 'package:livilon/features/home/presentation/screen/showproduct_screen.dart';
 import 'package:livilon/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:livilon/features/auth/presentation/bloc/forgetpass/forgot_password_bloc.dart';
@@ -31,7 +30,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(

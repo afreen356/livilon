@@ -181,7 +181,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             elevation: 3,
                             margin: const EdgeInsets.symmetric(vertical: 8),
                             child: ListTile(
-                             leading: Padding(padding: EdgeInsets.all(
+                             leading: Padding(padding: const EdgeInsets.all(
                               8,
                              ),
                              child: Container(

@@ -10,7 +10,7 @@ Widget customAddressAppbar(String text, BuildContext context) {
   return AppBar(
     elevation: 0,
     backgroundColor: Colors.transparent,
-   
+   automaticallyImplyLeading: true,
     title: Padding(
       padding: const EdgeInsets.only(right: 40),
       child: Text(

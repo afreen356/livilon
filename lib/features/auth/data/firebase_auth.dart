@@ -5,7 +5,8 @@ import 'dart:developer';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:livilon/features/home/presentation/screen/home_screen.dart';
+import 'package:livilon/features/auth/presentation/widgets/alertdialogue.dart';
+// import 'package:livilon/features/home/presentation/screen/home_screen.dart';
 
 
 
@@ -18,51 +19,50 @@ class FirebaseAuthService{
       UserCredential credential =await _auth.createUserWithEmailAndPassword(email: email, password: password);
       if (!credential.user!.emailVerified) {
       await credential.user!.sendEmailVerification();
-      showErrorDialogue('A verification email has been sent. Please verify your email before signing in.', context);
+      // showErrorDialogue( context);
     }
       return credential.user;
       
     }on FirebaseAuthException catch (e) {
-     showErrorDialogue(e.message??'An unknown error occured', context);
+      log('Some error occurred: $e');
       return null;
     } catch (e) {
       log('Some error occurred: $e');
-      showErrorDialogue('An unknown error occured',context);
+      
       return null;
     }
    
   }
 
-Future<User?> signInwithEmailandPassword(String email, String password, BuildContext context) async {
-  try {
-    UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-    if (!credential.user!.emailVerified) {
-      showErrorDialogue('Email is not verified. Please verify your email.', context);
-      await _auth.signOut();
+ Future<User?>signInwithEmailandPassword(String email,String password,BuildContext context)async{
+
+    try {
+      UserCredential credential =await _auth.signInWithEmailAndPassword(email: email, password: password);
+     if (!credential.user!.emailVerified) {
+      Navigator.pop(context);
+      log('Email not verified.');
+      alertDialogue('email is not verified', context);
       return null;
     }
-
-    // Navigate to the home page on success
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) =>const HomePage()), 
-    );
-
-    return credential.user;
-  } on FirebaseAuthException catch (e) {
-    if (context.mounted) {
-      showErrorDialogue(e.message ?? 'An unknown error occurred', context);
+      return credential.user;
+      
+    }on FirebaseAuthException catch (e) {
+      log('Some error occurred: $e');
+        Navigator.pop(context); 
+    showSnackBar(
+              'Email is not verified.Please verify your email by register', context);
+          return null;
+      
+    } catch (e) {
+        Navigator.pop(context); 
+    alertDialogue('Unexpected error occured', context); 
+      log('Some error occurred: $e');
+      
+      return null;
     }
-    return null;
-  } catch (e) {
-    log('Some error occurred: $e');
-    if (context.mounted) {
-      showErrorDialogue('An unknown error occurred', context);
-    }
-    return null;
+   
   }
-}
-void showErrorDialogue(String message, BuildContext context) {
+void showErrorDialogue( BuildContext context) {
   Color btnClr = const Color.fromRGBO(121, 147, 174, 1);
   showDialog(
       context: context,

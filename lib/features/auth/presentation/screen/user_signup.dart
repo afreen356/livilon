@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,14 +18,11 @@ class UserSignupScreen extends StatefulWidget {
 }
 
 class _UserSignupScreenState extends State<UserSignupScreen> {
- 
   final FirebaseAuthService auth = FirebaseAuthService();
-
-  
 
   final formKey = GlobalKey<FormState>();
   bool obscureText = true;
-  bool obscureTextCpass=true;
+  bool obscureTextCpass = true;
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -79,7 +78,7 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
                   horizontal: 20,
                 ),
                 child: CustomTextformfield(
-                  keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.name,
                     controller: usernameController,
                     validator: (value) {
                       if (value!.isEmpty) {
@@ -98,7 +97,7 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: CustomTextformfield(
-                  keyboardType: TextInputType.emailAddress,
+                    keyboardType: TextInputType.emailAddress,
                     controller: emailController,
                     validator: (value) {
                       if (value!.isEmpty) {
@@ -121,8 +120,8 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
               Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: CustomTextformfield(
-                    keyboardType: TextInputType.text,
-                     controller: passController,
+                      keyboardType: TextInputType.text,
+                      controller: passController,
                       validator: (value) {
                         if (value!.isEmpty) {
                           return 'please create a password';
@@ -137,11 +136,11 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
                       hintText: 'Password',
                       prefixIcon: const Icon(Icons.lock_open_outlined),
                       prefixIconColor: Colors.grey.shade400,
-                     obscureText: obscureText,
+                      obscureText: obscureText,
                       suffixIcon: GestureDetector(
                           onTap: () {
                             setState(() {
-                              obscureText=!obscureText;
+                              obscureText = !obscureText;
                             });
                           },
                           child: obscureText
@@ -153,8 +152,8 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
               Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: CustomTextformfield(
-                    keyboardType: TextInputType.text,
-                     controller: confirmPassController,
+                      keyboardType: TextInputType.text,
+                      controller: confirmPassController,
                       validator: (value) {
                         if (value!.isEmpty) {
                           return 'confirm your password';
@@ -168,11 +167,11 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
                       hintText: 'Confirm Password',
                       prefixIcon: const Icon(Icons.lock_open_outlined),
                       prefixIconColor: Colors.grey.shade400,
-                     obscureText: obscureTextCpass,
+                      obscureText: obscureTextCpass,
                       suffixIcon: GestureDetector(
                           onTap: () {
                             setState(() {
-                              obscureTextCpass= !obscureTextCpass;
+                              obscureTextCpass = !obscureTextCpass;
                             });
                           },
                           child: obscureTextCpass
@@ -185,7 +184,8 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
                 height: 50,
                 width: 300,
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5), color: getButtonColor()),
+                    borderRadius: BorderRadius.circular(5),
+                    color: getButtonColor()),
                 child: Center(
                   child: GestureDetector(
                     onTap: () {
@@ -217,7 +217,7 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
                   InkWell(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) =>const UserLoginScreen()));
+                          builder: (context) => const UserLoginScreen()));
                     },
                     child: Text(
                       'Sign In',
@@ -238,12 +238,40 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
     String username = usernameController.text;
     String email = emailController.text;
     String password = passController.text;
+    bool isSignUp = true;
+    showDialog(
+      context: context,
 
-   
+      /// Prevents closing the dialog by tapping outside
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: SizedBox(
+            height: 90,
+            width: 40,
+            child: Column(
+              children: [
+                Text("Signing in..."),
+                SizedBox(
+                  height: 20,
+                ),
+                CircularProgressIndicator(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
     User? user =
         await auth.signUpwithEmailandPassword(email, password, context);
 
     if (user != null) {
+      if (isSignUp) {
+      
+        Navigator.pop(context);
+        isSignUp = false;
+      }
       await FirebaseFirestore.instance.collection("user's").doc(user.uid).set({
         'uid': user.uid,
         'username': username,
@@ -252,18 +280,17 @@ class _UserSignupScreenState extends State<UserSignupScreen> {
       });
 
       log('user successfuly created');
-      // ignore: use_build_context_synchronously
-      if (mounted) {
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) =>const  HomePage()));
-      }
+     
+     
+       Navigator.of(context).pushAndRemoveUntil((MaterialPageRoute(builder: (context)=>const HomePage())), (Route route)=>false);
+      
 
-      // ignore: use_build_context_synchronously
+     
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-            backgroundColor:getButtonColor(),
+        SnackBar(
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+            backgroundColor: getButtonColor(),
             content: const Text(
               'User succesfully created.',
               style: TextStyle(color: Colors.white),

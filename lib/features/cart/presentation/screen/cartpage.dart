@@ -47,7 +47,7 @@ class CartPage extends StatelessWidget {
               leading: IconButton(
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const HomeScreen()));
+                      builder: (context) => const HomePage()));
                 },
                 icon: const Icon(Icons.arrow_back),
               ),
@@ -85,7 +85,7 @@ class CartPage extends StatelessWidget {
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const HomeScreen()));
+                            builder: (context) =>const HomePage()));
                       },
                       child: const Text(
                         "Start Shopping now !",
@@ -102,7 +102,13 @@ class CartPage extends StatelessWidget {
             backgroundColor: Colors.grey[50],
             appBar: AppBar(
               backgroundColor: Colors.grey[50],
-              leading: const Icon(Icons.arrow_back),
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const HomePage()));
+                },
+                icon: const Icon(Icons.arrow_back),
+              ),
               title: const Text(
                 'Bag',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),

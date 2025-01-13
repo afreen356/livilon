@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:livilon/features/auth/presentation/widgets/alertdialogue.dart';
 import 'package:livilon/features/auth/presentation/widgets/textformfield.dart';
 import 'package:livilon/features/home/presentation/screen/dimension_screen.dart';
 import 'package:livilon/features/home/presentation/screen/home_screen.dart';
@@ -11,7 +14,6 @@ import 'package:livilon/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:livilon/features/auth/presentation/bloc/auth/auth_state.dart';
 import 'package:livilon/features/auth/presentation/screen/forgot_pass.dart';
 import 'package:livilon/features/auth/presentation/screen/user_signup.dart';
-
 
 // ignore: must_be_immutable
 class UserLoginScreen extends StatefulWidget {
@@ -23,7 +25,7 @@ class UserLoginScreen extends StatefulWidget {
 
 class _UserLoginScreenState extends State<UserLoginScreen> {
   final FirebaseAuthService auth = FirebaseAuthService();
- 
+
   final formKey = GlobalKey<FormState>();
   bool obscureText = true;
   TextEditingController emailController = TextEditingController();
@@ -46,14 +48,13 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-       Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -84,13 +85,16 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         if (state is SuccessState) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.green,
-              content: Text('User authenticated successfully!',style: TextStyle(color: Colors.white),)),
+             SnackBar(
+                backgroundColor: getButtonColor(),
+                content:const Text(
+                  'User authenticated successfully!',
+                  style: TextStyle(color: Colors.white),
+                )),
           );
           Navigator.pushAndRemoveUntil(
               context,
-              (MaterialPageRoute(builder: (context) =>const HomePage())),
+              (MaterialPageRoute(builder: (context) => const HomePage())),
               (route) => false);
         } else if (state is UnAuthenticateState) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -124,7 +128,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: CustomTextformfield(
-                      keyboardType: TextInputType.emailAddress,
+                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value!.isEmpty) {
                             return 'please Enter your email';
@@ -147,7 +151,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: CustomTextformfield(
-                      keyboardType: TextInputType.text,
+                        keyboardType: TextInputType.text,
                         validator: (value) {
                           if (value!.isEmpty) {
                             return 'please enter your password';
@@ -179,7 +183,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                     height: 50,
                     width: 300,
                     decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5), color: getButtonColor()),
+                        borderRadius: BorderRadius.circular(5),
+                        color: getButtonColor()),
                     child: Center(
                       child: GestureDetector(
                         onTap: () {
@@ -311,85 +316,91 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     String email = emailController.text;
     String password = passController.text;
     bool isSignIn = true;
-        showDialog(
-      
+    showDialog(
       context: context,
+
       /// Prevents closing the dialog by tapping outside
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return const AlertDialog(
-          
           content: SizedBox(
             height: 90,
             width: 40,
             child: Column(
               children: [
                 Text("Signing in..."),
-                SizedBox(height: 20,),
-                 CircularProgressIndicator(),
-               
+                SizedBox(
+                  height: 20,
+                ),
+                CircularProgressIndicator(),
               ],
             ),
           ),
         );
       },
     );
-    
+
     try {
-      User? user = await auth.signInwithEmailandPassword(email,password,context);
+      User? user =
+          await auth.signInwithEmailandPassword(email, password, context);
       if (user != null) {
-        if(isSignIn){
-         // ignore: use_build_context_synchronously
-         Navigator.pop(context);
-         isSignIn=false;
-        }     
+        Navigator.pop(context);
+        if (!user.emailVerified) {
+          if (isSignIn) {
+            isSignIn = false;
+          }
+          showSnackBar(
+              'Email is not verified.Please verify your email', context);
+          return;
+        }
+
         // Successfully signed in, navigate to HomePage
-        // ignore: use_build_context_synchronously
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) =>const HomePage()));
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar( SnackBar(
-              backgroundColor: getButtonColor(),
-              duration: const Duration(seconds: 3),
-              behavior: SnackBarBehavior.floating,
-              content:  const Text('Successfully signedin',style: TextStyle(color: Colors.white),)));
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (Route<dynamic> route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          margin:const EdgeInsets.all(8),
+            backgroundColor: getButtonColor(),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            content: const Text(
+              'Successfully signedin',
+              style: TextStyle(color: Colors.white),
+            )));
 
         log('User signed in successfully');
       }
     } on FirebaseAuthException catch (e) {
-       if(isSignIn){
-         // ignore: use_build_context_synchronously
-         Navigator.pop(context);
-         isSignIn=false;
-        }   
-      
+      if (isSignIn) {
+        Navigator.pop(context);
+        isSignIn = false;
+      }
+
       // Show different messages based on the error code
       String errorMessage;
       if (e.code == 'user-not-found') {
         errorMessage = 'No user found with this email. Please sign up.';
       } else if (e.code == 'wrong-password') {
-
         errorMessage = 'Incorrect password. Please try again.';
       } else if (e.code == 'invalid-email') {
         errorMessage = 'The email address is badly formatted.';
       } else {
         errorMessage = 'Sign-in failed. Please try again.';
       }
-      Future.delayed(Duration.zero, () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
-      });
+      showSnackBar(errorMessage, context);
     }
   }
 
-  void checkUserLoginStatus(){
+  void checkUserLoginStatus() {
     User? user = FirebaseAuth.instance.currentUser;
 
-    if(user!=null){
-      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context)=>const HomePage()), (route)=>false);
+    if (user != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false);
     }
   }
 }
-
-
